@@ -3,26 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Overlay OBS - Artemis vs Seirit</title>
+  <title>Overlay OBS Vertical</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       margin: 0;
       background: transparent;
-      font-family: 'Segoe UI', sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
       height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
     }
+
     #chart-container {
-      width: 80%;
-      max-width: 800px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+      width: 300px;
+      height: 500px;
+      position: relative;
     }
+
     canvas {
       background: transparent;
     }
@@ -46,22 +45,20 @@
         const res = await fetch(url);
         const text = await res.text();
         const json = JSON.parse(text.substr(47).slice(0, -2));
-
         const rows = json.table.rows;
+
         let artemisTotal = 0;
         let seiritTotal = 0;
 
         rows.forEach(row => {
-          const name = row.c[0].v.toLowerCase();
+          const name = row.c[0]?.v?.toLowerCase() || '';
           const values = row.c.slice(1).map(cell => cell?.v || 0);
           const total = values.reduce((a, b) => a + b, 0);
-
           if (name.includes('artemis')) artemisTotal = total;
           if (name.includes('seirit')) seiritTotal = total;
         });
 
         updateChart([artemisTotal, seiritTotal]);
-
       } catch (err) {
         console.error('Error al obtener datos:', err);
       }
@@ -74,34 +71,49 @@
           data: {
             labels: ['Artemis', 'Seirit'],
             datasets: [{
-              label: 'Puntaje',
               data,
-              backgroundColor: ['#4bc0c0', '#ff6384'],
-              borderRadius: 15,
+              backgroundColor: ['#8e44ad', '#e84393'],
+              borderRadius: 12,
               borderSkipped: false,
+              shadowOffsetX: 2,
+              shadowOffsetY: 2,
+              shadowBlur: 10,
+              shadowColor: 'rgba(0,0,0,0.3)',
             }]
           },
           options: {
-            indexAxis: 'y',
+            indexAxis: 'x', // vertical
             responsive: true,
             plugins: {
               legend: { display: false },
-              tooltip: {
-                callbacks: {
-                  label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.x}`
-                }
+              tooltip: { enabled: false },
+              datalabels: {
+                anchor: 'center',
+                align: 'center',
+                color: '#fff',
+                font: {
+                  weight: 'bold',
+                  size: 20
+                },
+                formatter: value => value
               }
             },
             scales: {
-              x: {
-                beginAtZero: true,
-                grid: { color: 'rgba(255,255,255,0.1)' }
-              },
+              x: { display: false },
               y: {
+                display: true,
+                ticks: {
+                  color: '#fff',
+                  font: {
+                    size: 16,
+                    weight: 'bold'
+                  }
+                },
                 grid: { display: false }
               }
             }
-          }
+          },
+          plugins: [ChartDataLabels]
         });
       } else {
         chart.data.datasets[0].data = data;
@@ -109,8 +121,14 @@
       }
     }
 
-    fetchData();
-    setInterval(fetchData, 10000); // actualiza cada 10 segundos
+    // Cargar plugin de etiquetas
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels';
+    script.onload = () => {
+      fetchData();
+      setInterval(fetchData, 10000); // cada 10 segundos
+    };
+    document.head.appendChild(script);
   </script>
 </body>
 </html>
