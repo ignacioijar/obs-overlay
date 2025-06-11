@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Overlay OBS Vertical</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   <style>
     body {
       margin: 0;
@@ -73,40 +74,44 @@
             datasets: [{
               data,
               backgroundColor: ['#8e44ad', '#e84393'],
-              borderRadius: 12,
+              borderRadius: 15,
               borderSkipped: false,
-              shadowOffsetX: 2,
-              shadowOffsetY: 2,
-              shadowBlur: 10,
-              shadowColor: 'rgba(0,0,0,0.3)',
+              hoverBackgroundColor: ['#9b59b6', '#fd79a8'],
             }]
           },
           options: {
-            indexAxis: 'x', // vertical
+            indexAxis: 'y',
             responsive: true,
+            animation: {
+              duration: 800,
+              easing: 'easeOutQuart'
+            },
             plugins: {
               legend: { display: false },
               tooltip: { enabled: false },
               datalabels: {
-                anchor: 'center',
-                align: 'center',
                 color: '#fff',
                 font: {
                   weight: 'bold',
                   size: 20
                 },
-                formatter: value => value
+                formatter: value => value,
+                anchor: 'center',
+                align: 'center'
               }
             },
             scales: {
-              x: { display: false },
+              x: {
+                display: false,
+                stacked: true
+              },
               y: {
                 display: true,
                 ticks: {
-                  color: '#fff',
+                  color: '#ffffff',
                   font: {
-                    size: 16,
-                    weight: 'bold'
+                    weight: 'bold',
+                    size: 18
                   }
                 },
                 grid: { display: false }
@@ -115,21 +120,21 @@
           },
           plugins: [ChartDataLabels]
         });
+
+        // Aplicar sombras manuales a las barras usando contexto de canvas
+        Chart.defaults.elements.bar.backgroundColor = ctx.createLinearGradient(0, 0, 300, 0);
+        Chart.defaults.elements.bar.backgroundColor.addColorStop(0, '#8e44ad');
+        Chart.defaults.elements.bar.backgroundColor.addColorStop(1, '#9b59b6');
       } else {
         chart.data.datasets[0].data = data;
         chart.update();
       }
     }
 
-    // Cargar plugin de etiquetas
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels';
-    script.onload = () => {
-      fetchData();
-      setInterval(fetchData, 10000); // cada 10 segundos
-    };
-    document.head.appendChild(script);
+    fetchData();
+    setInterval(fetchData, 10000); // cada 10 segundos
   </script>
 </body>
 </html>
+
 
