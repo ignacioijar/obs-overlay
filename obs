@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Overlay OBS - Artemis vs Seirit</title>
+  <style>
+    body {
+      margin: 0;
+      background: transparent;
+      font-family: sans-serif;
+      color: white;
+      display: flex;
+      justify-content: center;
+      gap: 50px;
+      padding: 20px;
+      height: 100vh;
+      align-items: center;
+    }
+    .chart-container {
+      width: 40vw;
+      min-width: 300px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    canvas {
+      width: 100% !important;
+      height: auto !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="chart-container">
+    <h2>Artemis</h2>
+    <canvas id="chartArtemis"></canvas>
+  </div>
+
+  <div class="chart-container">
+    <h2>Seirit</h2>
+    <canvas id="chartSeirit"></canvas>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const sheetId = '1FPIw-LfqO-2dxbDduFcQD-0nVn4OLHPs1amXfEaXTd0';
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+
+    let chartArtemis, chartSeirit;
+
+    function crearGraficos() {
+      const ctxArtemis = document.getElementById('chartArtemis').getContext('2d');
+      const ctxSeirit = document.getElementById('chartSeirit').getContext('2d');
+
+      chartArtemis = new Chart(ctxArtemis, {
+        type: 'bar',
+        data: {
+          labels: ['A', 'B', 'C'],
+          datasets: [{
+            label: 'Puntos',
+            data: [0, 0, 0],
+            backgroundColor: 'rgba(255, 99, 132, 0.7)',
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+
+      chartSeirit = new Chart(ctxSeirit, {
+        type: 'bar',
+        data: {
+          labels: ['A', 'B', 'C'],
+          datasets: [{
+            label: 'Puntos',
+            data: [0, 0, 0],
+            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    async function fetchData() {
+      try {
+        const response = await fetch(url);
+        const text = await response.text();
+
+        const json = JSON.parse(text.substring(47).slice(0, -2));
+        const rows = json.table.rows;
+
+        let artemisData = [];
+        let seiritData = [];
+
+        rows.forEach(row => {
+          const equipo = row.c[0]?.v || '';
+          if (equipo === 'Artemis') {
+            artemisData = row.c.slice(1).map(cell => cell?.v || 0);
+          } else if (equipo === 'Seirit') {
+            seiritData = row.c.slice(1).map(cell => cell?.v || 0);
+          }
+        });
+
+        if (artemisData.length && chartArtemis) {
+          chartArtemis.data.datasets[0].data = artemisData;
+          chartArtemis.update();
+        }
+        if (seiritData.length && chartSeirit) {
+          chartSeirit.data.datasets[0].data = seiritData;
+          chartSeirit.update();
+        }
+
+      } catch (error) {
+        console.error('Error al obtener datos:', error);
+      }
+    }
+
+    crearGraficos();
+    fetchData();
+    setInterval(fetchData, 10000);
+  </script>
+</body>
+</html>
