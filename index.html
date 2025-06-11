@@ -2,129 +2,116 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Overlay OBS - Artemis vs Seirit</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       margin: 0;
       background: transparent;
-      font-family: sans-serif;
-      color: white;
+      font-family: 'Segoe UI', sans-serif;
       display: flex;
-      justify-content: center;
-      gap: 50px;
-      padding: 20px;
-      height: 100vh;
       align-items: center;
+      justify-content: center;
+      height: 100vh;
     }
-    .chart-container {
-      width: 40vw;
-      min-width: 300px;
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 10px;
+    #chart-container {
+      width: 80%;
+      max-width: 800px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
     }
     canvas {
-      width: 100% !important;
-      height: auto !important;
+      background: transparent;
     }
   </style>
 </head>
 <body>
-
-  <div class="chart-container">
-    <h2>Artemis</h2>
-    <canvas id="chartArtemis"></canvas>
+  <div id="chart-container">
+    <canvas id="overlayChart"></canvas>
   </div>
 
-  <div class="chart-container">
-    <h2>Seirit</h2>
-    <canvas id="chartSeirit"></canvas>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     const sheetId = '1FPIw-LfqO-2dxbDduFcQD-0nVn4OLHPs1amXfEaXTd0';
-    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+    const sheetName = 'Hoja 1';
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
 
-    let chartArtemis, chartSeirit;
-
-    function crearGraficos() {
-      const ctxArtemis = document.getElementById('chartArtemis').getContext('2d');
-      const ctxSeirit = document.getElementById('chartSeirit').getContext('2d');
-
-      chartArtemis = new Chart(ctxArtemis, {
-        type: 'bar',
-        data: {
-          labels: ['A', 'B', 'C'],
-          datasets: [{
-            label: 'Puntos',
-            data: [0, 0, 0],
-            backgroundColor: 'rgba(255, 99, 132, 0.7)',
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true } }
-        }
-      });
-
-      chartSeirit = new Chart(ctxSeirit, {
-        type: 'bar',
-        data: {
-          labels: ['A', 'B', 'C'],
-          datasets: [{
-            label: 'Puntos',
-            data: [0, 0, 0],
-            backgroundColor: 'rgba(54, 162, 235, 0.7)',
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true } }
-        }
-      });
-    }
+    const ctx = document.getElementById('overlayChart').getContext('2d');
+    let chart;
 
     async function fetchData() {
       try {
-        const response = await fetch(url);
-        const text = await response.text();
+        const res = await fetch(url);
+        const text = await res.text();
+        const json = JSON.parse(text.substr(47).slice(0, -2));
 
-        const json = JSON.parse(text.substring(47).slice(0, -2));
         const rows = json.table.rows;
-
-        let artemisData = [];
-        let seiritData = [];
+        let artemisTotal = 0;
+        let seiritTotal = 0;
 
         rows.forEach(row => {
-          const equipo = row.c[0]?.v || '';
-          if (equipo === 'Artemis') {
-            artemisData = row.c.slice(1).map(cell => cell?.v || 0);
-          } else if (equipo === 'Seirit') {
-            seiritData = row.c.slice(1).map(cell => cell?.v || 0);
-          }
+          const name = row.c[0].v.toLowerCase();
+          const values = row.c.slice(1).map(cell => cell?.v || 0);
+          const total = values.reduce((a, b) => a + b, 0);
+
+          if (name.includes('artemis')) artemisTotal = total;
+          if (name.includes('seirit')) seiritTotal = total;
         });
 
-        if (artemisData.length && chartArtemis) {
-          chartArtemis.data.datasets[0].data = artemisData;
-          chartArtemis.update();
-        }
-        if (seiritData.length && chartSeirit) {
-          chartSeirit.data.datasets[0].data = seiritData;
-          chartSeirit.update();
-        }
+        updateChart([artemisTotal, seiritTotal]);
 
-      } catch (error) {
-        console.error('Error al obtener datos:', error);
+      } catch (err) {
+        console.error('Error al obtener datos:', err);
       }
     }
 
-    crearGraficos();
+    function updateChart(data) {
+      if (!chart) {
+        chart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Artemis', 'Seirit'],
+            datasets: [{
+              label: 'Puntaje',
+              data,
+              backgroundColor: ['#4bc0c0', '#ff6384'],
+              borderRadius: 15,
+              borderSkipped: false,
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.x}`
+                }
+              }
+            },
+            scales: {
+              x: {
+                beginAtZero: true,
+                grid: { color: 'rgba(255,255,255,0.1)' }
+              },
+              y: {
+                grid: { display: false }
+              }
+            }
+          }
+        });
+      } else {
+        chart.data.datasets[0].data = data;
+        chart.update();
+      }
+    }
+
     fetchData();
-    setInterval(fetchData, 10000);
+    setInterval(fetchData, 10000); // actualiza cada 10 segundos
   </script>
 </body>
 </html>
+
