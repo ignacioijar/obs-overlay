@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Overlay OBS Vertical</title>
+  <title>Overlay OBS con Imagen</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   <style>
@@ -14,22 +14,33 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
-      font-family: 'Segoe UI', sans-serif;
     }
 
     #chart-container {
+      position: relative;
       width: 300px;
       height: 500px;
-      position: relative;
+    }
+
+    #background {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: url('https://cdn.discordapp.com/attachments/1382526961569763420/1382533683675664434/Capa_1.png?ex=684b8054&is=684a2ed4&hm=b5f84eaa947c6d0a3ab46ba414a7d27e06b644c4a6ddb47d6924eabab715aebe&') no-repeat center center;
+      background-size: contain;
+      z-index: 1;
+      pointer-events: none;
     }
 
     canvas {
-      background: transparent;
+      position: relative;
+      z-index: 2;
     }
   </style>
 </head>
 <body>
   <div id="chart-container">
+    <div id="background"></div>
     <canvas id="overlayChart"></canvas>
   </div>
 
@@ -77,11 +88,12 @@
               borderRadius: 15,
               borderSkipped: false,
               hoverBackgroundColor: ['#9b59b6', '#fd79a8'],
+              borderWidth: 1,
+              borderColor: '#ffffff',
             }]
           },
           options: {
             indexAxis: 'y',
-            responsive: true,
             animation: {
               duration: 800,
               easing: 'easeOutQuart'
@@ -101,18 +113,12 @@
               }
             },
             scales: {
-              x: {
-                display: false,
-                stacked: true
-              },
+              x: { display: false },
               y: {
                 display: true,
                 ticks: {
-                  color: '#ffffff',
-                  font: {
-                    weight: 'bold',
-                    size: 18
-                  }
+                  color: '#fff',
+                  font: { weight: 'bold', size: 18 }
                 },
                 grid: { display: false }
               }
@@ -120,11 +126,6 @@
           },
           plugins: [ChartDataLabels]
         });
-
-        // Aplicar sombras manuales a las barras usando contexto de canvas
-        Chart.defaults.elements.bar.backgroundColor = ctx.createLinearGradient(0, 0, 300, 0);
-        Chart.defaults.elements.bar.backgroundColor.addColorStop(0, '#8e44ad');
-        Chart.defaults.elements.bar.backgroundColor.addColorStop(1, '#9b59b6');
       } else {
         chart.data.datasets[0].data = data;
         chart.update();
