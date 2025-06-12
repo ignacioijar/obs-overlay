@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Overlay OBS con Imagen</title>
+  <title>OBS Overlay Toast Style</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
   <style>
@@ -11,25 +11,32 @@
       margin: 0;
       background: transparent;
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: center;
       height: 100vh;
+      font-family: sans-serif;
     }
 
-    #chart-container {
+    .chart-container {
       position: relative;
       width: 300px;
       height: 500px;
     }
 
-    #background {
+    .toast-img {
       position: absolute;
-      width: 100%;
-      height: 100%;
-      background: url('https://cdn.discordapp.com/attachments/1382526961569763420/1382533683675664434/Capa_1.png?ex=684b8054&is=684a2ed4&hm=b5f84eaa947c6d0a3ab46ba414a7d27e06b644c4a6ddb47d6924eabab715aebe&') no-repeat center center;
-      background-size: contain;
-      z-index: 1;
-      pointer-events: none;
+      width: 60px;
+      height: 60px;
+      top: -40px;
+      z-index: 5;
+    }
+
+    #toast-artemis {
+      left: 30px;
+    }
+
+    #toast-seirit {
+      right: 30px;
     }
 
     canvas {
@@ -39,8 +46,10 @@
   </style>
 </head>
 <body>
-  <div id="chart-container">
-    <div id="background"></div>
+  <div class="chart-container">
+    <!-- Imagenes encima de cada barra -->
+    <img id="toast-artemis" class="toast-img" src="https://cdn.discordapp.com/attachments/1382526961569763420/1382533683675664434/Capa_1.png?ex=684b8054&is=684a2ed4&hm=b5f84eaa947c6d0a3ab46ba414a7d27e06b644c4a6ddb47d6924eabab715aebe&" alt="Artemis toast" />
+    <img id="toast-seirit" class="toast-img" src="https://cdn.discordapp.com/attachments/1382526961569763420/1382533683675664434/Capa_1.png?ex=684b8054&is=684a2ed4&hm=b5f84eaa947c6d0a3ab46ba414a7d27e06b644c4a6ddb47d6924eabab715aebe&" alt="Seirit toast" />
     <canvas id="overlayChart"></canvas>
   </div>
 
@@ -85,18 +94,17 @@
             datasets: [{
               data,
               backgroundColor: ['#8e44ad', '#e84393'],
-              borderRadius: 15,
+              borderRadius: 20,
               borderSkipped: false,
-              hoverBackgroundColor: ['#9b59b6', '#fd79a8'],
               borderWidth: 1,
               borderColor: '#ffffff',
             }]
           },
           options: {
-            indexAxis: 'y',
+            indexAxis: 'x',
             animation: {
               duration: 800,
-              easing: 'easeOutQuart'
+              easing: 'easeOutBounce'
             },
             plugins: {
               legend: { display: false },
@@ -113,14 +121,16 @@
               }
             },
             scales: {
-              x: { display: false },
-              y: {
-                display: true,
+              x: {
                 ticks: {
                   color: '#fff',
                   font: { weight: 'bold', size: 18 }
                 },
                 grid: { display: false }
+              },
+              y: {
+                beginAtZero: true,
+                display: false
               }
             }
           },
@@ -133,9 +143,7 @@
     }
 
     fetchData();
-    setInterval(fetchData, 10000); // cada 10 segundos
+    setInterval(fetchData, 10000); // Actualiza cada 10s
   </script>
 </body>
 </html>
-
-
