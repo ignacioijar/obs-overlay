@@ -3,69 +3,98 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OBS Overlay Toast Style</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+  <title>Overlay OBS</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
+      padding: 0;
       background: transparent;
       display: flex;
-      align-items: flex-end;
       justify-content: center;
+      align-items: flex-end;
       height: 100vh;
       font-family: sans-serif;
     }
-
-    .chart-container {
+    .container {
+      display: flex;
+      gap: 100px;
+      align-items: flex-end;
       position: relative;
-      width: 300px;
-      height: 500px;
     }
-
+    .bar-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
     .toast-img {
+      width: 80px;
       position: absolute;
-      width: 60px;
-      height: 60px;
-      top: -40px;
-      z-index: 5;
-    }
-
-    #toast-artemis {
-      left: 30px;
-    }
-
-    #toast-seirit {
-      right: 30px;
-    }
-
-    canvas {
-      position: relative;
+      top: -90px;
       z-index: 2;
+    }
+    .bar {
+      width: 60px;
+      height: 300px;
+      background: #ccc;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .fill {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      border-radius: 20px 20px 0 0;
+    }
+    .label {
+      margin-top: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      text-shadow: 1px 1px 4px #000;
     }
   </style>
 </head>
 <body>
-  <div class="chart-container">
-    <!-- Imagenes encima de cada barra -->
-    <img id="toast-artemis" class="toast-img" src="https://cdn.discordapp.com/attachments/1382526961569763420/1382533683675664434/Capa_1.png?ex=684b8054&is=684a2ed4&hm=b5f84eaa947c6d0a3ab46ba414a7d27e06b644c4a6ddb47d6924eabab715aebe&" alt="Artemis toast" />
-    <img id="toast-seirit" class="toast-img" src="https://cdn.discordapp.com/attachments/1382526961569763420/1382533683675664434/Capa_1.png?ex=684b8054&is=684a2ed4&hm=b5f84eaa947c6d0a3ab46ba414a7d27e06b644c4a6ddb47d6924eabab715aebe&" alt="Seirit toast" />
-    <canvas id="overlayChart"></canvas>
+  <div class="container">
+    <div class="bar-group" id="artemis-bar">
+      <img class="toast-img" src="https://cdn.discordapp.com/attachments/1382526961569763420/1382533683675664434/Capa_1.png" alt="Artemis" />
+      <div class="bar">
+        <div class="fill" id="fill-artemis" style="background-color: #8e44ad; height: 50%">0</div>
+      </div>
+      <div class="label">Artemis</div>
+    </div>
+
+    <div class="bar-group" id="seirit-bar">
+      <img class="toast-img" src="https://cdn.discordapp.com/attachments/1382526961569763420/1382533683675664434/Capa_1.png" alt="Seirit" />
+      <div class="bar">
+        <div class="fill" id="fill-seirit" style="background-color: #e84393; height: 30%">0</div>
+      </div>
+      <div class="label">Seirit</div>
+    </div>
   </div>
 
   <script>
-    const sheetId = '1FPIw-LfqO-2dxbDduFcQD-0nVn4OLHPs1amXfEaXTd0';
-    const sheetName = 'Hoja 1';
+    const sheetId = "1FPIw-LfqO-2dxbDduFcQD-0nVn4OLHPs1amXfEaXTd0";
+    const sheetName = "Hoja 1";
     const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
-
-    const ctx = document.getElementById('overlayChart').getContext('2d');
-    let chart;
 
     async function fetchData() {
       try {
         const res = await fetch(url);
         const text = await res.text();
-        const json = JSON.parse(text.substr(47).slice(0, -2));
+        const json = JSON.parse(text.substring(47).slice(0, -2));
         const rows = json.table.rows;
 
         let artemisTotal = 0;
@@ -79,71 +108,22 @@
           if (name.includes('seirit')) seiritTotal = total;
         });
 
-        updateChart([artemisTotal, seiritTotal]);
+        updateBars(artemisTotal, seiritTotal);
       } catch (err) {
-        console.error('Error al obtener datos:', err);
+        console.error('Error al leer datos:', err);
       }
     }
 
-    function updateChart(data) {
-      if (!chart) {
-        chart = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: ['Artemis', 'Seirit'],
-            datasets: [{
-              data,
-              backgroundColor: ['#8e44ad', '#e84393'],
-              borderRadius: 20,
-              borderSkipped: false,
-              borderWidth: 1,
-              borderColor: '#ffffff',
-            }]
-          },
-          options: {
-            indexAxis: 'x',
-            animation: {
-              duration: 800,
-              easing: 'easeOutBounce'
-            },
-            plugins: {
-              legend: { display: false },
-              tooltip: { enabled: false },
-              datalabels: {
-                color: '#fff',
-                font: {
-                  weight: 'bold',
-                  size: 20
-                },
-                formatter: value => value,
-                anchor: 'center',
-                align: 'center'
-              }
-            },
-            scales: {
-              x: {
-                ticks: {
-                  color: '#fff',
-                  font: { weight: 'bold', size: 18 }
-                },
-                grid: { display: false }
-              },
-              y: {
-                beginAtZero: true,
-                display: false
-              }
-            }
-          },
-          plugins: [ChartDataLabels]
-        });
-      } else {
-        chart.data.datasets[0].data = data;
-        chart.update();
-      }
+    function updateBars(artemis, seirit) {
+      const max = Math.max(artemis, seirit, 1); // Evita división por 0
+      document.getElementById('fill-artemis').style.height = `${(artemis / max) * 100}%`;
+      document.getElementById('fill-seirit').style.height = `${(seirit / max) * 100}%`;
+      document.getElementById('fill-artemis').textContent = artemis;
+      document.getElementById('fill-seirit').textContent = seirit;
     }
 
     fetchData();
-    setInterval(fetchData, 10000); // Actualiza cada 10s
+    setInterval(fetchData, 10000);
   </script>
 </body>
 </html>
